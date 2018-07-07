@@ -18,14 +18,14 @@ public class BaseRequestModel {
      * action : login
      * app_key : xxxxx
      * time : 21212323
-     * token : xxxx
+     * TOKEN : xxxx
      * sign : xxxxx
      */
 
     private String action;
     private String app_key = Constants.MIFENG_KEY;
-    private long time;
-    private String token;
+    private long time = System.currentTimeMillis()/1000;
+    private String token = Constants.TOKEN;
     private String sign;
 
     public String getAction() {

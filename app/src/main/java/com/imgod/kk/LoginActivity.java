@@ -12,20 +12,28 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.imgod.kk.app.Constants;
+import com.imgod.kk.request_model.LoginModel;
+import com.imgod.kk.response_model.LoginResponse;
+import com.imgod.kk.utils.GsonUtil;
 import com.imgod.kk.utils.LogUtils;
+import com.imgod.kk.utils.MD5Utils;
+import com.imgod.kk.utils.MapUtils;
+import com.imgod.kk.utils.SignUtils;
 import com.imgod.kk.utils.ToastUtils;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.BitmapCallback;
 import com.zhy.http.okhttp.callback.StringCallback;
 
 import okhttp3.Call;
+import okhttp3.MediaType;
 
 public class LoginActivity extends BaseActivity {
 
     private EditText etv_phone;
     private EditText etv_pwd;
-    private EditText etv_img_code;
-    private ImageView iv_code;
+    //    private EditText etv_img_code;
+//    private ImageView iv_code;
     private View mLoginFormView;
 
     @Override
@@ -35,8 +43,8 @@ public class LoginActivity extends BaseActivity {
         // Set up the login form.
         etv_phone = (EditText) findViewById(R.id.etv_phone);
         etv_pwd = (EditText) findViewById(R.id.etv_pwd);
-        etv_img_code = findViewById(R.id.etv_img_code);
-        iv_code = findViewById(R.id.iv_code);
+//        etv_img_code = findViewById(R.id.etv_img_code);
+//        iv_code = findViewById(R.id.iv_code);
         etv_pwd.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -48,25 +56,23 @@ public class LoginActivity extends BaseActivity {
             }
         });
 
-        iv_code.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                requestLoadImageCode();
-            }
-        });
+//        iv_code.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//            }
+//        });
 
 
         Button btn_login = (Button) findViewById(R.id.btn_login);
         btn_login.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+//                LogUtils.e("onClick", MD5Utils.EncoderByMD5("123456"));
                 attemptLogin();
             }
         });
 
         mLoginFormView = findViewById(R.id.login_form);
-//        requestIndexHomePage(REFRESH_TYPE_GET_COOKIE);
-        requestLoadImageCode();
     }
 
 
@@ -75,11 +81,11 @@ public class LoginActivity extends BaseActivity {
         // Reset errors.
         etv_phone.setError(null);
         etv_pwd.setError(null);
-        etv_img_code.setError(null);
+//        etv_img_code.setError(null);
         // Store values at the time of the login attempt.
         String phone = etv_phone.getText().toString();
         String password = etv_pwd.getText().toString();
-        String imgCode = etv_img_code.getText().toString();
+//        String imgCode = etv_img_code.getText().toString();
         // Check for a valid phone address.
         if (TextUtils.isEmpty(phone)) {
             etv_phone.setError(getString(R.string.error_phone_required));
@@ -100,18 +106,18 @@ public class LoginActivity extends BaseActivity {
             etv_pwd.requestFocus();
             return;
         }
-        if (TextUtils.isEmpty(imgCode)) {
-            etv_img_code.setError(getString(R.string.error_invalid_img_code));
-            etv_img_code.requestFocus();
-            return;
-        } else if (!TextUtils.isEmpty(imgCode) && !isPasswordValid(imgCode)) {
-            etv_img_code.setError(getString(R.string.error_invalid_img_code));
-            etv_img_code.requestFocus();
-            return;
-        }
+//        if (TextUtils.isEmpty(imgCode)) {
+//            etv_img_code.setError(getString(R.string.error_invalid_img_code));
+//            etv_img_code.requestFocus();
+//            return;
+//        } else if (!TextUtils.isEmpty(imgCode) && !isPasswordValid(imgCode)) {
+//            etv_img_code.setError(getString(R.string.error_invalid_img_code));
+//            etv_img_code.requestFocus();
+//            return;
+//        }
 
         //请求登录的逻辑
-        requestLogin(phone, password, imgCode);
+        requestLogin(phone, password);
     }
 
     private boolean isPhoneValid(String phone) {
@@ -129,41 +135,28 @@ public class LoginActivity extends BaseActivity {
         return !TextUtils.isEmpty(password);
     }
 
-
-    public static final String IMG_CODE_URL = "http://www.mf178.cn/login/captcha";
-
-    private void requestLoadImageCode() {
+    /**
+     * 请求登录服务器
+     *
+     * @param phone 账号
+     * @param pwd   密码
+     */
+    private void requestLogin(String phone, String pwd) {
         showProgressDialog();
+        LoginModel loginModel = new LoginModel();
+        loginModel.setAction(API.ACTION_LOGIN);
+        loginModel.setUsername(phone);
+        loginModel.setPassword(pwd);
+
+        String sign = SignUtils.getSortedKeyStringFromObject(loginModel);
+        LogUtils.e("requestLogin", "sign:" + sign);
+        String md5Sign = MD5Utils.EncoderByMD5(sign);
+        loginModel.setSign(md5Sign);
         OkHttpUtils
-                .get()//
-                .url(IMG_CODE_URL)//
-                .build()//
-                .execute(new BitmapCallback() {
-                    @Override
-                    public void onError(Call call, Exception e, int id) {
-                        hideProgressDialog();
-                        ToastUtils.showToastShort(LoginActivity.this, "图片验证码加载失败,请重试");
-                        iv_code.setImageResource(R.drawable.ic_img_load_error);
-                    }
-
-                    @Override
-                    public void onResponse(Bitmap response, int id) {
-                        hideProgressDialog();
-                        iv_code.setImageBitmap(response);
-                    }
-                });
-    }
-
-    public static final String LOGIN_URL = "http://www.mf178.cn/login/index";
-
-    private void requestLogin(String phone, String pwd, String imgCode) {
-        showProgressDialog();
-        OkHttpUtils
-                .post()
-                .url(LOGIN_URL)
-                .addParams("username", phone)
-                .addParams("password", pwd)
-                .addParams("vcode", imgCode)
+                .postString()
+                .url(API.OPEN_API)
+                .content(GsonUtil.GsonString(loginModel))
+                .mediaType(MediaType.parse("application/json; charset=utf-8"))
                 .build()
                 .execute(new StringCallback() {
                     @Override
@@ -177,56 +170,19 @@ public class LoginActivity extends BaseActivity {
                     public void onResponse(String response, int id) {
                         hideProgressDialog();
                         LogUtils.e("onResponse", response);
-                        requestIndexHomePage(REFRESH_TYPE_GET_LOGIN_STATUS);
-                    }
-                });
-    }
-
-
-    public static final String INDEX_URL = "http://www.mf178.cn";
-
-    private int REFRESH_TYPE_GET_COOKIE = 0x00;
-    private int REFRESH_TYPE_GET_LOGIN_STATUS = 0x01;
-
-    private void requestIndexHomePage(final int type) {
-        showProgressDialog();
-        OkHttpUtils
-                .get()
-                .url(INDEX_URL)
-                .build()
-                .execute(new StringCallback() {
-                    @Override
-                    public void onError(Call call, Exception e, int id) {
-                        LogUtils.e("onError", e.getMessage());
-                        hideProgressDialog();
-                        ToastUtils.showToastShort(LoginActivity.this, "登录失败:" + e.getMessage());
-                    }
-
-                    @Override
-                    public void onResponse(String response, int id) {
-                        hideProgressDialog();
-                        LogUtils.e("onResponse", response);
-                        if (type == REFRESH_TYPE_GET_LOGIN_STATUS) {
-                            parseLoginResponse(response);
-                        } else if (type == REFRESH_TYPE_GET_COOKIE) {
-                            requestLoadImageCode();
+                        LoginResponse loginResponse = GsonUtil.GsonToBean(response, LoginResponse.class);
+                        if (null != loginResponse) {
+                            if (loginResponse.getRet() == Constants.REQUEST_STATUS.SUCCESS) {
+                                Constants.TOKEN = loginResponse.getData();
+                                ToastUtils.showToastShort(LoginActivity.this, "登录成功");
+                                MainActivity.actionStart(LoginActivity.this);
+                                finish();
+                            } else {
+                                ToastUtils.showToastShort(LoginActivity.this, loginResponse.getMsg());
+                            }
                         }
                     }
                 });
     }
-
-    private void parseLoginResponse(String response) {
-        if (response.contains("登录成功")) {
-            ToastUtils.showToastShort(LoginActivity.this, "登录成功");
-            MainActivity.actionStart(LoginActivity.this);
-            finish();
-        } else if (response.contains("验证码错误")) {
-            ToastUtils.showToastShort(LoginActivity.this, "验证码错误");
-            requestLoadImageCode();
-        } else {
-            ToastUtils.showToastShort(LoginActivity.this, "密码错误");
-        }
-    }
-
 }
 

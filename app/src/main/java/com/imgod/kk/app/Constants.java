@@ -13,4 +13,10 @@ package com.imgod.kk.app;
 public class Constants {
     public static final String MIFENG_KEY = "56124619";
     public static final String MIFENG_SECRET = "b4895e19198db5844f10d3b7d63cec41";
+    public static String TOKEN = "";
+
+    public interface REQUEST_STATUS {
+        int SUCCESS = 0;
+        int FAILED = 1;
+    }
 }
