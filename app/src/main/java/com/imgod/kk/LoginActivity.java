@@ -19,6 +19,7 @@ import com.imgod.kk.utils.GsonUtil;
 import com.imgod.kk.utils.LogUtils;
 import com.imgod.kk.utils.MD5Utils;
 import com.imgod.kk.utils.MapUtils;
+import com.imgod.kk.utils.ModelUtils;
 import com.imgod.kk.utils.SignUtils;
 import com.imgod.kk.utils.ToastUtils;
 import com.zhy.http.okhttp.OkHttpUtils;
@@ -147,11 +148,7 @@ public class LoginActivity extends BaseActivity {
         loginModel.setAction(API.ACTION_LOGIN);
         loginModel.setUsername(phone);
         loginModel.setPassword(pwd);
-
-        String sign = SignUtils.getSortedKeyStringFromObject(loginModel);
-        LogUtils.e("requestLogin", "sign:" + sign);
-        String md5Sign = MD5Utils.EncoderByMD5(sign);
-        loginModel.setSign(md5Sign);
+        ModelUtils.initModelSign(loginModel);
         OkHttpUtils
                 .postString()
                 .url(API.OPEN_API)

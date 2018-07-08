@@ -12,8 +12,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.imgod.kk.app.Constants;
+import com.imgod.kk.request_model.GetTaskModel;
+import com.imgod.kk.response_model.BaseResponse;
+import com.imgod.kk.response_model.GetTaskResponse;
+import com.imgod.kk.utils.GsonUtil;
 import com.imgod.kk.utils.LogUtils;
 import com.imgod.kk.utils.MediaPlayUtils;
+import com.imgod.kk.utils.ModelUtils;
 import com.imgod.kk.utils.ToastUtils;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
@@ -25,8 +31,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import okhttp3.Call;
+import okhttp3.MediaType;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
     private static final String TAG = "MainActivity";
     public static final int RUSH_MODEL_NOT_RUSH = 0;//不抢购
     public static final int RUSH_MODEL_RUSH = 1;//抢购
@@ -62,15 +69,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String title = btn_action.getText().toString();
-                if (title.equals("开始")) {
-                    btn_action.setText("停止");
-                    rush_model = RUSH_MODEL_RUSH;
-                    requestPlatformOrderSize();
-                } else {
-                    btn_action.setText("开始");
-                    rush_model = RUSH_MODEL_NOT_RUSH;
-                    requestPlatformOrderSizeCall.cancel();
-                }
+//
+//                if (title.equals("开始")) {
+//                    btn_action.setText("停止");
+//                    rush_model = RUSH_MODEL_RUSH;
+////                    requestPlatformOrderSize();
+//                    requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
+//                } else {
+//                    btn_action.setText("开始");
+//                    rush_model = RUSH_MODEL_NOT_RUSH;
+//                    requestPlatformOrderSizeCall.cancel();
+//                }
+                requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
 
             }
         });
@@ -179,32 +189,38 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(String response, int id) {
-                requestGetTask(amount, count);
             }
         });
     }
 
 
+    private int mRequestOperator = Constants.OPERATOR_TYPE.DEFAULT;
+    private String mRequestProvince = "";
+    private int mRequestAmount = 50;
     private RequestCall requestGetTaskCall;
-    //真正请求获取任务
-    private static final String GET_TASK_URL = "http://www.mf178.cn/customer/order/get_tasks?contract%5B%5D=1&contract%5B%5D=2&contract%5B%5D=4&contract%5B%5D=8&contract%5B%5D=16&contract%5B%5D=32&contract%5B%5D=256&contract%5B%5D=64&contract%5B%5D=128&SEQ=1530858401";
 
-    private void requestGetTask(String amount, String count) {
-        requestGetTaskCall = OkHttpUtils.get().url(GET_TASK_URL)
-                .addParams("amount", amount)
-                .addParams("count", count)
+    private void requestGetTask(int operator, String prov, int amount) {
+        GetTaskModel getTaskModel = new GetTaskModel();
+        getTaskModel.setAction(API.ACTION_GET);
+        getTaskModel.setOperator(operator);
+        getTaskModel.setProv(prov);
+        getTaskModel.setAmount(amount);
+
+        ModelUtils.initModelSign(getTaskModel);
+
+        requestGetTaskCall = OkHttpUtils.postString().url(API.OPEN_API)
+                .content(GsonUtil.GsonString(getTaskModel))
+                .mediaType(MediaType.parse("application/json; charset=utf-8"))
                 .build();
         requestGetTaskCall.execute(new StringCallback() {
             @Override
             public void onError(Call call, Exception e, int id) {
-                if (!call.isCanceled()) {
-                    requestPlatformOrderSize();
-                }
+                ToastUtils.showToastShort(MainActivity.this, e.getMessage());
             }
 
             @Override
             public void onResponse(String response, int id) {
-                LogUtils.e(TAG, "requestGetTask onResponse: "+response);
+                LogUtils.e(TAG, "requestGetTask onResponse: " + response);
                 parseGetTaskResponse(response);
             }
         });
@@ -212,21 +228,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void parseGetTaskResponse(String response) {
-        if (response.contains("成功获取1条订单,请在指定时间内完成订单")) {//成功获取到号码
-            Document document = Jsoup.parse(response);
-            Elements elements = document.getElementsByClass("btn btn-xs btn-info copy_btn");
-            if (elements.size() > 0) {
-                Element resultElement = elements.get(0);
-                LogUtils.e(TAG, "resultElement:" + resultElement.text());
-                tv_result.setText("获取到的手机号码为:" + resultElement.text());
-                tv_result.setVisibility(View.VISIBLE);
-
-                MediaPlayUtils.playSound(MainActivity.this, "memeda.wav");
-            } else {
-                requestPlatformOrderSize();
-            }
+        BaseResponse baseResponse = GsonUtil.GsonToBean(response, BaseResponse.class);
+        if (baseResponse.getRet() == Constants.REQUEST_STATUS.SUCCESS) {
+            GetTaskResponse getTaskResponse = GsonUtil.GsonToBean(response, GetTaskResponse.class);
+            ToastUtils.showToastShort(mContext, "获取成功:" + getTaskResponse.getData().getMobile());
         } else {
-            requestPlatformOrderSize();
+            ToastUtils.showToastShort(mContext, "获取失败:" + baseResponse.getMsg());
         }
     }
 

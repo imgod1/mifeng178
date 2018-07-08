@@ -1,6 +1,10 @@
 package com.imgod.kk;
 
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.os.Bundle;
+import android.os.PersistableBundle;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
 /**
@@ -14,6 +18,15 @@ import android.support.v7.app.AppCompatActivity;
  * @used {@link }
  */
 public class BaseActivity extends AppCompatActivity {
+
+    public Context mContext;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mContext = this;
+    }
+
     private ProgressDialog mProgressDialog;
 
     public void showProgressDialog() {

@@ -19,4 +19,26 @@ public class Constants {
         int SUCCESS = 0;
         int FAILED = 1;
     }
+
+    //运营商类型
+    public interface OPERATOR_TYPE {
+        int DEFAULT = 0;//默认 不限制运营商
+        int MOBILE = 1;//中国移动
+        int UNICOM = 2;//中国联通
+        int TELECOM = 3;//中国电信
+    }
+
+    //省份列表
+    public static String[] PROVINCE_ARRAY = {
+            "山东","江苏","四川","陕西","湖北","北京","天津",
+            "上海","广东","广西","浙江","河南","甘肃","吉林",
+            "辽宁","内蒙古","新疆","黑龙江","福建","河北","重庆",
+            "安徽","海南","江西","山西","湖南","青海","贵州","宁夏",
+            "云南","西藏","台湾","香港","澳门"
+    };
+
+    //话费面额
+    public static int[] AMOUNT_ARRAY={
+            30,50,100,200,300,500
+    };
 }

@@ -25,6 +25,8 @@ public class SignUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return stringBuilder.toString() + Constants.MIFENG_SECRET;
+        String result = stringBuilder.toString() + Constants.MIFENG_SECRET;
+        LogUtils.e("SignUtils", result);
+        return result;
     }
 }

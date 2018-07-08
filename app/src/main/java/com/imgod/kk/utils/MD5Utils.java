@@ -23,7 +23,9 @@ public class MD5Utils {
                 buf.append(Integer.toHexString(tmp));
             }
 // return buf.toString().substring(8, 24);// 16位加密
-            return buf.toString();// 32位加密
+            String result = buf.toString();// 32位加密
+            LogUtils.e("MD5Utils", result);
+            return result;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
