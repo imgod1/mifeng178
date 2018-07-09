@@ -17,4 +17,6 @@ public interface API {
     //action类型
     String ACTION_LOGIN = "login";
     String ACTION_GET = "get";
+    String ACTION_REPORT = "report";
+    String ACTION_ORDER = "order";
 }

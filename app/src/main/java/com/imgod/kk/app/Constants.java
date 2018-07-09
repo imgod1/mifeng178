@@ -30,6 +30,7 @@ public class Constants {
 
     //省份列表
     public static String[] PROVINCE_ARRAY = {
+            "不限",
             "山东","江苏","四川","陕西","湖北","北京","天津",
             "上海","广东","广西","浙江","河南","甘肃","吉林",
             "辽宁","内蒙古","新疆","黑龙江","福建","河北","重庆",
@@ -41,4 +42,11 @@ public class Constants {
     public static int[] AMOUNT_ARRAY={
             30,50,100,200,300,500
     };
+
+    //报单的时候的充值类型
+    public interface RECHARGE_TYPE {
+        int SUCCESS = 1;//成功下单并充值成功
+        int FAILED = 2;//下单失败 我没充 尽量让用户反复确认
+    }
+
 }

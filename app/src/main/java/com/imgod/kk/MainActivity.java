@@ -3,24 +3,33 @@ package com.imgod.kk;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.design.widget.BottomSheetDialog;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.imgod.kk.app.Constants;
 import com.imgod.kk.request_model.GetTaskModel;
+import com.imgod.kk.request_model.ReportModel;
 import com.imgod.kk.response_model.BaseResponse;
 import com.imgod.kk.response_model.GetTaskResponse;
 import com.imgod.kk.utils.GsonUtil;
 import com.imgod.kk.utils.LogUtils;
 import com.imgod.kk.utils.MediaPlayUtils;
 import com.imgod.kk.utils.ModelUtils;
+import com.imgod.kk.utils.OperatorUtils;
 import com.imgod.kk.utils.ToastUtils;
+import com.imgod.kk.views.RowView;
+import com.zhy.adapter.recyclerview.CommonAdapter;
+import com.zhy.adapter.recyclerview.MultiItemTypeAdapter;
+import com.zhy.adapter.recyclerview.base.ViewHolder;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
 import com.zhy.http.okhttp.request.RequestCall;
@@ -29,6 +38,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import java.util.Arrays;
 
 import okhttp3.Call;
 import okhttp3.MediaType;
@@ -49,26 +60,29 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initViews();
-
+        initEvent();
     }
 
-    private TextView tv_hint;
-    private TextView tv_result;
     Toolbar toolbar;
-    Button btn_action;
+    private RowView rview_operator;
+    private RowView rview_province;
+    private RowView rview_amount;
 
     private void initViews() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        rview_operator = findViewById(R.id.rview_operator);
+        rview_province = findViewById(R.id.rview_province);
+        rview_amount = findViewById(R.id.rview_amount);
 
-        tv_hint = findViewById(R.id.tv_hint);
-        tv_result = findViewById(R.id.tv_result);
-
-        btn_action = findViewById(R.id.btn_action);
-        btn_action.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String title = btn_action.getText().toString();
+        rview_operator.setTitle("运营商");
+        rview_province.setTitle("省份");
+        rview_amount.setTitle("面额");
+        setRowViewContent();
+//        btn_action.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                String title = btn_action.getText().toString();
 //
 //                if (title.equals("开始")) {
 //                    btn_action.setText("停止");
@@ -80,13 +94,36 @@ public class MainActivity extends BaseActivity {
 //                    rush_model = RUSH_MODEL_NOT_RUSH;
 //                    requestPlatformOrderSizeCall.cancel();
 //                }
-                requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
-
-            }
-        });
+//                requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
+//
+//            }
+//        });
         selectId = R.id.action_30;
         selectTechphoneChargeName = getString(R.string.action_30);
         setToolBarTitle();
+    }
+
+    private void initEvent() {
+        rview_operator.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSelectOperatorDialog();
+            }
+        });
+
+        rview_province.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSelectProvinceDialog();
+            }
+        });
+
+        rview_amount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSelectAmountDialog();
+            }
+        });
     }
 
     private void setToolBarTitle() {
@@ -104,35 +141,29 @@ public class MainActivity extends BaseActivity {
     private void requestPlatformOrderSize() {
         if (rush_model == RUSH_MODEL_RUSH) {
             loopTimes++;
-            tv_hint.setText("正在为你进行第" + loopTimes + "次尝试");
-            tv_result.setVisibility(View.GONE);
 
-            btn_action.postDelayed(new Runnable() {
+            requestPlatformOrderSizeCall = OkHttpUtils.get().url(ORDER_LIST_URL).build();
+            requestPlatformOrderSizeCall.execute(new StringCallback() {
                 @Override
-                public void run() {
-                    requestPlatformOrderSizeCall = OkHttpUtils.get().url(ORDER_LIST_URL).build();
-                    requestPlatformOrderSizeCall.execute(new StringCallback() {
-                        @Override
-                        public void onError(Call call, Exception e, int id) {
-                            if (!call.isCanceled()) {
-                                requestPlatformOrderSize();
-                            }
-                        }
-
-                        @Override
-                        public void onResponse(String response, int id) {//
-                            if (response.contains("平台暂未订单，请稍后再试")) {
-                                ToastUtils.showToastShort(MainActivity.this, "平台暂未订单，请稍后再试");
-                                requestPlatformOrderSize();
-                            } else {
-                                parseOrderSizeResponse(response);
-                            }
-                        }
-                    });
+                public void onError(Call call, Exception e, int id) {
+                    if (!call.isCanceled()) {
+                        requestPlatformOrderSize();
+                    }
                 }
-            }, 500);
+
+                @Override
+                public void onResponse(String response, int id) {//
+                    if (response.contains("平台暂未订单，请稍后再试")) {
+                        ToastUtils.showToastShort(MainActivity.this, "平台暂未订单，请稍后再试");
+                        requestPlatformOrderSize();
+                    } else {
+                        parseOrderSizeResponse(response);
+                    }
+                }
+            });
         }
     }
+
 
     /**
      * 解析网络请求得到的数据
@@ -155,7 +186,6 @@ public class MainActivity extends BaseActivity {
                     if (orderNum > 0) {
                         //如果该选项还有剩余订单的话,那这个时候应该先发起抢订单的操作
                         LogUtils.e(TAG, techphoneChargeName + "话费单有库存,请及时去抢单");
-                        requestGetTaskWarn(techphoneChargeName.replace("元", ""), "1");
                     } else {
                         //如果没有数量 那就应该执行刷新操作了
                         requestPlatformOrderSize();
@@ -170,27 +200,14 @@ public class MainActivity extends BaseActivity {
     }
 
 
-    private RequestCall requestGetTaskWarnCall;
-    //请求获取任务之前的确认弹窗
-    private static final String GET_TASK_WARN_URL = "http://www.mf178.cn/customer/order/ajax";
-
-    private void requestGetTaskWarn(final String amount, final String count) {
-        requestGetTaskWarnCall = OkHttpUtils.get().url(GET_TASK_WARN_URL)
-                .addParams("action", "get_tasks")
-                .addParams("amount", amount)
-                .build();
-        requestGetTaskWarnCall.execute(new StringCallback() {
-            @Override
-            public void onError(Call call, Exception e, int id) {
-                if (!call.isCanceled()) {
-                    requestGetTaskWarn(amount, count);
-                }
-            }
-
-            @Override
-            public void onResponse(String response, int id) {
-            }
-        });
+    private void setRowViewContent() {
+        rview_operator.setContent(OperatorUtils.getOperatorNameByType(mRequestOperator));
+        if (TextUtils.isEmpty(mRequestProvince)) {
+            rview_province.setContent("不限");
+        } else {
+            rview_province.setContent(mRequestProvince);
+        }
+        rview_amount.setContent("" + mRequestAmount);
     }
 
 
@@ -199,6 +216,7 @@ public class MainActivity extends BaseActivity {
     private int mRequestAmount = 50;
     private RequestCall requestGetTaskCall;
 
+    //获取任务
     private void requestGetTask(int operator, String prov, int amount) {
         GetTaskModel getTaskModel = new GetTaskModel();
         getTaskModel.setAction(API.ACTION_GET);
@@ -226,17 +244,57 @@ public class MainActivity extends BaseActivity {
         });
     }
 
-
+    //解析获取任务的结果
     private void parseGetTaskResponse(String response) {
         BaseResponse baseResponse = GsonUtil.GsonToBean(response, BaseResponse.class);
         if (baseResponse.getRet() == Constants.REQUEST_STATUS.SUCCESS) {
             GetTaskResponse getTaskResponse = GsonUtil.GsonToBean(response, GetTaskResponse.class);
             ToastUtils.showToastShort(mContext, "获取成功:" + getTaskResponse.getData().getMobile());
         } else {
-            ToastUtils.showToastShort(mContext, "获取失败:" + baseResponse.getMsg());
+            ToastUtils.showToastShort(mContext, baseResponse.getMsg());
         }
     }
 
+
+    private RequestCall requestReportCall;
+
+    //上报充值结果
+    private void requestReportTask(String id, String mobile, int result, String voucher) {
+        ReportModel reportModel = new ReportModel();
+        reportModel.setAction(API.ACTION_REPORT);
+        reportModel.setId(id);
+        reportModel.setMobile(mobile);
+        reportModel.setResult(result);
+        reportModel.setVoucher(voucher);
+        ModelUtils.initModelSign(reportModel);
+
+        requestReportCall = OkHttpUtils.postString().url(API.OPEN_API)
+                .content(GsonUtil.GsonString(reportModel))
+                .mediaType(MediaType.parse("application/json; charset=utf-8"))
+                .build();
+        requestReportCall.execute(new StringCallback() {
+            @Override
+            public void onError(Call call, Exception e, int id) {
+                ToastUtils.showToastShort(mContext, e.getMessage());
+            }
+
+            @Override
+            public void onResponse(String response, int id) {
+                LogUtils.e(TAG, "requestGetTask onResponse: " + response);
+                parseReportResponse(response);
+            }
+        });
+    }
+
+    //解析上报充值结果
+    private void parseReportResponse(String response) {
+        BaseResponse baseResponse = GsonUtil.GsonToBean(response, BaseResponse.class);
+        if (baseResponse.getRet() == Constants.REQUEST_STATUS.SUCCESS) {
+            ToastUtils.showToastShort(mContext, baseResponse.getMsg());
+        } else {
+            ToastUtils.showToastShort(mContext, baseResponse.getMsg());
+        }
+    }
 
     private String getTelephoneChargeName(String text) {
         if (!TextUtils.isEmpty(text)) {
@@ -305,5 +363,163 @@ public class MainActivity extends BaseActivity {
         setToolBarTitle();
         loopTimes = 0;
         return super.onOptionsItemSelected(item);
+    }
+
+    private BottomSheetDialog operatorDialog;
+    private View operatorDialogView;
+    private TextView tv_default;
+    private TextView tv_mobile;
+    private TextView tv_unicom;
+    private TextView tv_telecom;
+
+    //选择运营商的对话框
+    private void showSelectOperatorDialog() {
+        if (null == operatorDialog) {
+            operatorDialog = new BottomSheetDialog(mContext);
+            operatorDialogView = LayoutInflater.from(mContext).inflate(R.layout.dialog_operator, null, false);
+            tv_default = operatorDialogView.findViewById(R.id.tv_default);
+            tv_mobile = operatorDialogView.findViewById(R.id.tv_mobile);
+            tv_unicom = operatorDialogView.findViewById(R.id.tv_unicom);
+            tv_telecom = operatorDialogView.findViewById(R.id.tv_telecom);
+            tv_default.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mRequestOperator = Constants.OPERATOR_TYPE.DEFAULT;
+                    operatorDialog.dismiss();
+                    setRowViewContent();
+                }
+            });
+
+            tv_mobile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mRequestOperator = Constants.OPERATOR_TYPE.MOBILE;
+                    operatorDialog.dismiss();
+                    setRowViewContent();
+                }
+            });
+
+            tv_unicom.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mRequestOperator = Constants.OPERATOR_TYPE.UNICOM;
+                    operatorDialog.dismiss();
+                    setRowViewContent();
+                }
+            });
+
+            tv_telecom.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mRequestOperator = Constants.OPERATOR_TYPE.TELECOM;
+                    operatorDialog.dismiss();
+                    setRowViewContent();
+                }
+            });
+            operatorDialog.setContentView(operatorDialogView);
+        }
+        if (null != operatorDialog && !operatorDialog.isShowing()) {
+            operatorDialog.show();
+        }
+    }
+
+
+    private BottomSheetDialog amountDialog;
+    private View amountDialogView;
+    private TextView tv_30;
+    private TextView tv_50;
+    private TextView tv_100;
+    private TextView tv_200;
+    private TextView tv_300;
+    private TextView tv_500;
+
+    //选择话费面额的对话框
+    private void showSelectAmountDialog() {
+        if (null == amountDialog) {
+            amountDialog = new BottomSheetDialog(mContext);
+            amountDialogView = LayoutInflater.from(mContext).inflate(R.layout.dialog_amount, null, false);
+            tv_30 = amountDialogView.findViewById(R.id.tv_30);
+            tv_50 = amountDialogView.findViewById(R.id.tv_50);
+            tv_100 = amountDialogView.findViewById(R.id.tv_100);
+            tv_200 = amountDialogView.findViewById(R.id.tv_200);
+            tv_300 = amountDialogView.findViewById(R.id.tv_300);
+            tv_500 = amountDialogView.findViewById(R.id.tv_500);
+
+
+            View.OnClickListener onClickListener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String tag = (String) v.getTag();
+                    if (!TextUtils.isEmpty(tag)) {
+                        mRequestAmount = Integer.parseInt(tag);
+                        amountDialog.dismiss();
+                        setRowViewContent();
+                    }
+                }
+            };
+
+            tv_30.setOnClickListener(onClickListener);
+            tv_50.setOnClickListener(onClickListener);
+            tv_100.setOnClickListener(onClickListener);
+            tv_200.setOnClickListener(onClickListener);
+            tv_300.setOnClickListener(onClickListener);
+            tv_500.setOnClickListener(onClickListener);
+
+            amountDialog.setContentView(amountDialogView);
+        }
+        if (null != amountDialog && !amountDialog.isShowing()) {
+            amountDialog.show();
+        }
+    }
+
+
+    private BottomSheetDialog provinceDialog;
+    private View provinceDialogView;
+    private RecyclerView dialog_recylerview;
+
+    //选择省份的对话框
+    private void showSelectProvinceDialog() {
+        if (null == provinceDialog) {
+            provinceDialog = new BottomSheetDialog(mContext);
+            provinceDialogView = LayoutInflater.from(mContext).inflate(R.layout.dialog_list, null, false);
+            dialog_recylerview = provinceDialogView.findViewById(R.id.dialog_recylerview);
+            dialog_recylerview.setLayoutManager(new LinearLayoutManager(mContext));
+            CommonAdapter<String> commonAdapter = new CommonAdapter<String>(mContext, R.layout.item_province, Arrays.asList(Constants.PROVINCE_ARRAY)) {
+                @Override
+                protected void convert(ViewHolder holder, String s, int position) {
+                    holder.setText(R.id.tv_title, s);
+                }
+            };
+            commonAdapter.setOnItemClickListener(new MultiItemTypeAdapter.OnItemClickListener() {
+                @Override
+                public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
+                    String result = Constants.PROVINCE_ARRAY[position];
+                    if(result.equals("不限")) {
+                        mRequestProvince = "";
+                    } else {
+                        mRequestProvince = result;
+                    }
+                    provinceDialog.dismiss();
+                    setRowViewContent();
+                }
+
+                @Override
+                public boolean onItemLongClick(View view, RecyclerView.ViewHolder holder, int position) {
+                    return false;
+                }
+            });
+            dialog_recylerview.setAdapter(commonAdapter);
+
+            provinceDialog.setContentView(provinceDialogView);
+
+            View parent = (View) provinceDialogView.getParent();
+            CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) parent.getLayoutParams();
+            params.height = 500;
+            parent.setLayoutParams(params);
+
+        }
+        if (null != provinceDialog && !provinceDialog.isShowing()) {
+            provinceDialog.show();
+        }
     }
 }
