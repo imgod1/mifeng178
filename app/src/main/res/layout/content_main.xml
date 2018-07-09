@@ -14,19 +14,36 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-       <include layout="@layout/line_horizontal"/>
+    <include layout="@layout/line_horizontal"/>
 
-       <com.imgod.kk.views.RowView
-           android:id="@+id/rview_province"
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"/>
+    <com.imgod.kk.views.RowView
+        android:id="@+id/rview_province"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
-       <include layout="@layout/line_horizontal"/>
+    <include layout="@layout/line_horizontal"/>
 
-       <com.imgod.kk.views.RowView
-           android:id="@+id/rview_amount"
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"/>
+    <com.imgod.kk.views.RowView
+        android:id="@+id/rview_amount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
-       <include layout="@layout/line_horizontal"/>
+    <include layout="@layout/line_horizontal"/>
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <include layout="@layout/item_recharge_order"/>
+
+        <TextView
+            android:id="@+id/tv_get_mobile_number"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/row_height"
+            android:layout_alignParentBottom="true"
+            android:gravity="center"
+            android:text="获取号码"
+            android:textSize="16dp"/>
+    </RelativeLayout>
 </LinearLayout>

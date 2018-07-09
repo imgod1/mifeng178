@@ -98,7 +98,6 @@ public class MainActivity extends BaseActivity {
 //
 //            }
 //        });
-        selectId = R.id.action_30;
         selectTechphoneChargeName = getString(R.string.action_30);
         setToolBarTitle();
     }
@@ -256,23 +255,11 @@ public class MainActivity extends BaseActivity {
     }
 
 
-    private RequestCall requestReportCall;
+    private static RequestCall requestReportCall;
 
     //上报充值结果
     private void requestReportTask(String id, String mobile, int result, String voucher) {
-        ReportModel reportModel = new ReportModel();
-        reportModel.setAction(API.ACTION_REPORT);
-        reportModel.setId(id);
-        reportModel.setMobile(mobile);
-        reportModel.setResult(result);
-        reportModel.setVoucher(voucher);
-        ModelUtils.initModelSign(reportModel);
-
-        requestReportCall = OkHttpUtils.postString().url(API.OPEN_API)
-                .content(GsonUtil.GsonString(reportModel))
-                .mediaType(MediaType.parse("application/json; charset=utf-8"))
-                .build();
-        requestReportCall.execute(new StringCallback() {
+        requestReportTask(id, mobile, result, voucher, new StringCallback() {
             @Override
             public void onError(Call call, Exception e, int id) {
                 ToastUtils.showToastShort(mContext, e.getMessage());
@@ -285,6 +272,24 @@ public class MainActivity extends BaseActivity {
             }
         });
     }
+
+    //上报充值结果
+    public static void requestReportTask(String id, String mobile, int result, String voucher, StringCallback stringCallback) {
+        ReportModel reportModel = new ReportModel();
+        reportModel.setAction(API.ACTION_REPORT);
+        reportModel.setId(id);
+        reportModel.setMobile(mobile);
+        reportModel.setResult(result);
+        reportModel.setVoucher(voucher);
+        ModelUtils.initModelSign(reportModel);
+
+        requestReportCall = OkHttpUtils.postString().url(API.OPEN_API)
+                .content(GsonUtil.GsonString(reportModel))
+                .mediaType(MediaType.parse("application/json; charset=utf-8"))
+                .build();
+        requestReportCall.execute(stringCallback);
+    }
+
 
     //解析上报充值结果
     private void parseReportResponse(String response) {
@@ -326,42 +331,16 @@ public class MainActivity extends BaseActivity {
         return true;
     }
 
-    private int selectId;
     private String selectTechphoneChargeName;
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == selectId) {
-            return super.onOptionsItemSelected(item);
-        }
-        selectId = id;
-        if (null != requestPlatformOrderSizeCall) {
-            requestPlatformOrderSizeCall.cancel();
-        }
-        //noinspection SimplifiableIfStatement
         switch (id) {
-            case R.id.action_30:
-                selectTechphoneChargeName = getString(R.string.action_30);
-                break;
-            case R.id.action_50:
-                selectTechphoneChargeName = getString(R.string.action_50);
-                break;
-            case R.id.action_100:
-                selectTechphoneChargeName = getString(R.string.action_100);
-                break;
-            case R.id.action_200:
-                selectTechphoneChargeName = getString(R.string.action_200);
-                break;
-            case R.id.action_300:
-                selectTechphoneChargeName = getString(R.string.action_300);
-                break;
-            case R.id.action_500:
-                selectTechphoneChargeName = getString(R.string.action_500);
+            case R.id.action_histroy:
+                RechargingActivity.actionStart(mContext);
                 break;
         }
-        setToolBarTitle();
-        loopTimes = 0;
         return super.onOptionsItemSelected(item);
     }
 

@@ -3,9 +3,8 @@
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.imgod.kk.MainActivity">
     <item
-        android:id="@+id/action_histroy"
+        android:id="@+id/action_pick_photo"
         android:orderInCategory="100"
-        android:title="历史订单"
-        android:icon="@drawable/ic_histroy"
+        android:title="选择照片"
         app:showAsAction="ifRoom"/>
 </menu>

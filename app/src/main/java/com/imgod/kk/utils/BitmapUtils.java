@@ -16,7 +16,7 @@ import java.io.ByteArrayOutputStream;
  * @used {@link }
  */
 public class BitmapUtils {
-    public String Bitmap2StrByBase64(Bitmap bit, int quality) {
+    public static String Bitmap2StrByBase64(Bitmap bit, int quality) {
         if (quality <= 0 || quality > 100) {
             quality = 40;//默认40
         }
