@@ -1,6 +1,8 @@
 package com.imgod.kk;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.BottomSheetDialog;
@@ -20,6 +22,7 @@ import com.imgod.kk.request_model.GetTaskModel;
 import com.imgod.kk.request_model.ReportModel;
 import com.imgod.kk.response_model.BaseResponse;
 import com.imgod.kk.response_model.GetTaskResponse;
+import com.imgod.kk.utils.DateUtils;
 import com.imgod.kk.utils.GsonUtil;
 import com.imgod.kk.utils.LogUtils;
 import com.imgod.kk.utils.MediaPlayUtils;
@@ -68,6 +71,18 @@ public class MainActivity extends BaseActivity {
     private RowView rview_province;
     private RowView rview_amount;
 
+    private View item_order;
+    private TextView tv_phone_number;
+    private TextView tv_province;
+    private TextView tv_amount;
+    private TextView tv_id;
+    private TextView tv_date;
+    private TextView tv_action_1;
+    private TextView tv_action_2;
+
+
+    private TextView tv_get_mobile_number;
+
     private void initViews() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -75,29 +90,36 @@ public class MainActivity extends BaseActivity {
         rview_province = findViewById(R.id.rview_province);
         rview_amount = findViewById(R.id.rview_amount);
 
+        item_order = findViewById(R.id.item_order);
+        tv_phone_number = findViewById(R.id.tv_phone_number);
+        tv_province = findViewById(R.id.tv_province);
+        tv_amount = findViewById(R.id.tv_amount);
+        tv_id = findViewById(R.id.tv_id);
+        tv_date = findViewById(R.id.tv_date);
+        tv_action_1 = findViewById(R.id.tv_action_1);
+        tv_action_2 = findViewById(R.id.tv_action_2);
+
+
+        tv_get_mobile_number = findViewById(R.id.tv_get_mobile_number);
         rview_operator.setTitle("运营商");
         rview_province.setTitle("省份");
         rview_amount.setTitle("面额");
         setRowViewContent();
-//        btn_action.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                String title = btn_action.getText().toString();
-//
-//                if (title.equals("开始")) {
-//                    btn_action.setText("停止");
-//                    rush_model = RUSH_MODEL_RUSH;
-////                    requestPlatformOrderSize();
-//                    requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
-//                } else {
-//                    btn_action.setText("开始");
-//                    rush_model = RUSH_MODEL_NOT_RUSH;
-//                    requestPlatformOrderSizeCall.cancel();
-//                }
-//                requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
-//
-//            }
-//        });
+        tv_get_mobile_number.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (rush_model == RUSH_MODEL_NOT_RUSH) {
+                    rush_model = RUSH_MODEL_RUSH;
+                    tv_get_mobile_number.setText("正在获取号码...");
+                    requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
+                } else {
+                    rush_model = RUSH_MODEL_NOT_RUSH;
+                    tv_get_mobile_number.setText("获取号码");
+                    requestGetTaskCall.cancel();
+                }
+
+            }
+        });
         selectTechphoneChargeName = getString(R.string.action_30);
         setToolBarTitle();
     }
@@ -217,6 +239,9 @@ public class MainActivity extends BaseActivity {
 
     //获取任务
     private void requestGetTask(int operator, String prov, int amount) {
+        if (rush_model != RUSH_MODEL_RUSH) {
+            return;
+        }
         GetTaskModel getTaskModel = new GetTaskModel();
         getTaskModel.setAction(API.ACTION_GET);
         getTaskModel.setOperator(operator);
@@ -248,9 +273,77 @@ public class MainActivity extends BaseActivity {
         BaseResponse baseResponse = GsonUtil.GsonToBean(response, BaseResponse.class);
         if (baseResponse.getRet() == Constants.REQUEST_STATUS.SUCCESS) {
             GetTaskResponse getTaskResponse = GsonUtil.GsonToBean(response, GetTaskResponse.class);
-            ToastUtils.showToastShort(mContext, "获取成功:" + getTaskResponse.getData().getMobile());
+            final GetTaskResponse.DataBean dataBean = getTaskResponse.getData();
+            item_order.setVisibility(View.VISIBLE);
+            tv_phone_number.setText(dataBean.getMobile());
+            tv_province.setText(dataBean.getProv());
+            tv_amount.setText(dataBean.getAmount());
+            tv_id.setText("订单号:" + dataBean.getId());
+            if (!TextUtils.isEmpty(dataBean.getTimeout())) {
+                tv_date.setText(DateUtils.getFormatDateTimeFromMillSecons(Long.parseLong(dataBean.getTimeout()) * 1000));
+            }
+            tv_action_1.setText("我已充值");
+            tv_action_2.setText("我没充值");
+            tv_action_1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                }
+            });
+
+            tv_action_2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    requestReportTask(dataBean.getId(), dataBean.getMobile(), Constants.RECHARGE_TYPE.FAILED, "");
+                }
+            });
+            showGetOrderSuccessDialog();
         } else {
-            ToastUtils.showToastShort(mContext, baseResponse.getMsg());
+            item_order.setVisibility(View.GONE);
+            tv_get_mobile_number.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
+                }
+            }, 5000);
+        }
+    }
+
+
+    private AlertDialog getOrderSuccessDialog;
+
+    private void showGetOrderSuccessDialog() {
+        if (null == getOrderSuccessDialog) {
+            getOrderSuccessDialog = new AlertDialog.Builder(mContext)
+                    .setTitle("提示")
+                    .setMessage("成功获取到一条订单,请及时充值")
+                    .setCancelable(false)
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            getOrderSuccessDialog.dismiss();
+                        }
+                    })
+                    .create();
+
+            getOrderSuccessDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                @Override
+                public void onShow(DialogInterface dialogInterface) {
+                    MediaPlayUtils.playSound(mContext, "memeda.wav");
+                }
+            });
+
+            getOrderSuccessDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialogInterface) {
+                    MediaPlayUtils.stopPlay();
+                }
+            });
+        }
+
+        if (!getOrderSuccessDialog.isShowing()) {
+            getOrderSuccessDialog.dismiss();
         }
     }
 

@@ -82,7 +82,7 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tv_change_photo"
+                android:id="@+id/tv_action_1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/shape_color_green_corner_4"
@@ -91,7 +91,7 @@
                 android:textColor="@color/white"/>
 
             <TextView
-                android:id="@+id/tv_change_2_failed"
+                android:id="@+id/tv_action_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_margin"

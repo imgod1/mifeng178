@@ -35,7 +35,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <include layout="@layout/item_recharge_order"/>
+        <include
+            android:id="@+id/item_order"
+            android:visibility="gone"
+            layout="@layout/item_recharge_order"/>
 
         <TextView
             android:id="@+id/tv_get_mobile_number"

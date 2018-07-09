@@ -29,7 +29,7 @@ public class GetTaskResponse extends BaseResponse {
         private String prov;
         private String mobile;
         private int amount;
-        private long timeout;
+        private String timeout;
 
         public String getId() {
             return id;
@@ -63,11 +63,11 @@ public class GetTaskResponse extends BaseResponse {
             this.amount = amount;
         }
 
-        public long getTimeout() {
+        public String getTimeout() {
             return timeout;
         }
 
-        public void setTimeout(long timeout) {
+        public void setTimeout(String timeout) {
             this.timeout = timeout;
         }
     }

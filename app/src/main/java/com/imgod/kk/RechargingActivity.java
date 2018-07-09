@@ -16,6 +16,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -63,8 +64,12 @@ public class RechargingActivity extends BaseActivity {
     }
 
     private List<RechargingResponse.DataBean> orderList = new ArrayList<>();
+    Toolbar toolbar;
 
     private void initViews() {
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         srlayout = findViewById(R.id.srlayout);
         recylerview = findViewById(R.id.recylerview);
 
@@ -78,8 +83,8 @@ public class RechargingActivity extends BaseActivity {
                 holder.setText(R.id.tv_amount, "" + dataBean.getAmount());
                 holder.setText(R.id.tv_date, DateUtils.getFormatDateTimeFromMillSecons(dataBean.getCreate_time() * 1000));
 
-                TextView tv_change_photo = holder.getView(R.id.tv_change_photo);
-                TextView tv_change_2_failed = holder.getView(R.id.tv_change_2_failed);
+                TextView tv_change_photo = holder.getView(R.id.tv_action_1);
+                TextView tv_change_2_failed = holder.getView(R.id.tv_action_2);
                 tv_change_photo.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
