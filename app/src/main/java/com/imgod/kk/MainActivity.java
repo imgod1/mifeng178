@@ -381,41 +381,24 @@ public class MainActivity extends BaseActivity {
             tv_mobile = operatorDialogView.findViewById(R.id.tv_mobile);
             tv_unicom = operatorDialogView.findViewById(R.id.tv_unicom);
             tv_telecom = operatorDialogView.findViewById(R.id.tv_telecom);
-            tv_default.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mRequestOperator = Constants.OPERATOR_TYPE.DEFAULT;
-                    operatorDialog.dismiss();
-                    setRowViewContent();
-                }
-            });
 
-            tv_mobile.setOnClickListener(new View.OnClickListener() {
+            View.OnClickListener onClickListener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    mRequestOperator = Constants.OPERATOR_TYPE.MOBILE;
-                    operatorDialog.dismiss();
-                    setRowViewContent();
+                    String tag = (String) v.getTag();
+                    if (!TextUtils.isEmpty(tag)) {
+                        mRequestOperator = Integer.parseInt(tag);
+                        operatorDialog.dismiss();
+                        setRowViewContent();
+                    }
                 }
-            });
+            };
 
-            tv_unicom.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mRequestOperator = Constants.OPERATOR_TYPE.UNICOM;
-                    operatorDialog.dismiss();
-                    setRowViewContent();
-                }
-            });
+            tv_default.setOnClickListener(onClickListener);
+            tv_mobile.setOnClickListener(onClickListener);
+            tv_unicom.setOnClickListener(onClickListener);
+            tv_telecom.setOnClickListener(onClickListener);
 
-            tv_telecom.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    mRequestOperator = Constants.OPERATOR_TYPE.TELECOM;
-                    operatorDialog.dismiss();
-                    setRowViewContent();
-                }
-            });
             operatorDialog.setContentView(operatorDialogView);
         }
         if (null != operatorDialog && !operatorDialog.isShowing()) {
@@ -494,7 +477,7 @@ public class MainActivity extends BaseActivity {
                 @Override
                 public void onItemClick(View view, RecyclerView.ViewHolder holder, int position) {
                     String result = Constants.PROVINCE_ARRAY[position];
-                    if(result.equals("不限")) {
+                    if (result.equals("不限")) {
                         mRequestProvince = "";
                     } else {
                         mRequestProvince = result;
@@ -512,6 +495,7 @@ public class MainActivity extends BaseActivity {
 
             provinceDialog.setContentView(provinceDialogView);
 
+            //设置对话框的高度
             View parent = (View) provinceDialogView.getParent();
             CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) parent.getLayoutParams();
             params.height = 500;

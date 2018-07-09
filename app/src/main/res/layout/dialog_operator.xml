@@ -9,6 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/row_height"
         android:gravity="center"
+        android:tag="0"
         android:text="不限"/>
 
     <include layout="@layout/line_horizontal"/>
@@ -18,6 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/row_height"
         android:gravity="center"
+        android:tag="1"
         android:text="移动"/>
 
     <include layout="@layout/line_horizontal"/>
@@ -27,6 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/row_height"
         android:gravity="center"
+        android:tag="2"
         android:text="联通"/>
 
     <include layout="@layout/line_horizontal"/>
@@ -36,6 +39,7 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/row_height"
         android:gravity="center"
+        android:tag="3"
         android:text="电信"/>
 
     <include layout="@layout/line_horizontal"/>
