@@ -15,7 +15,7 @@ public class SignUtils {
             Iterator<String> iter = keySet.iterator();
             while (iter.hasNext()) {
                 String key = iter.next();
-                if (!"sign".equals(key)) {//把sign字段排除
+                if (!"sign".equals(key) && !key.contains("$") && !"serialVersionUID".equals(key)) {//把sign字段 以及反射后附加的含$和serialVersionUID的字段排除
                     stringBuilder.append(key);
                     if (null != treeMap.get(key)) {
                         stringBuilder.append(treeMap.get(key));

@@ -53,15 +53,18 @@ public class MapUtils {
         }
 
         TreeMap<String, Object> map = new TreeMap<>();
-        addObjectAttribute2Map(obj,obj.getClass(), map);//加自己的属性
-        addObjectAttribute2Map(obj,obj.getClass().getSuperclass(), map);//加父类的属性
+        addObjectAttribute2Map(obj, obj.getClass(), map);//加自己的属性
+        addObjectAttribute2Map(obj, obj.getClass().getSuperclass(), map);//加父类的属性
         return map;
     }
 
-    private static void addObjectAttribute2Map(Object object,Class tempClass, Map map) throws Exception {
+    private static final String TAG = "MapUtils";
+
+    private static void addObjectAttribute2Map(Object object, Class tempClass, Map map) throws Exception {
         Field[] declaredFields = tempClass.getDeclaredFields();
         for (Field field : declaredFields) {
             field.setAccessible(true);
+            LogUtils.e(TAG, "addObjectAttribute2Map:field: " + field.getName() + "\t value:" + field.get(object));
             map.put(field.getName(), field.get(object));
         }
     }
