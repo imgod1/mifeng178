@@ -654,7 +654,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 LogUtils.e(TAG, "onActivityResult: " + uri.getEncodedPath());
                 try {
                     Bitmap bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
-                    String voucher = BitmapUtils.Bitmap2StrByBase64(bit, 40);
+                    String voucher = BitmapUtils.bitmapToBase64(bit, 40);
                     LogUtils.e(TAG, "onActivityResult: " + voucher);
                     requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.SUCCESS, voucher);
                 } catch (FileNotFoundException e) {

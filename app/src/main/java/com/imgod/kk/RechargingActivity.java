@@ -20,6 +20,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.imgod.kk.app.Constants;
@@ -55,6 +56,7 @@ public class RechargingActivity extends BaseActivity {
 
     private SwipeRefreshLayout srlayout;
     private RecyclerView recylerview;
+    private ImageView iv_bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +75,7 @@ public class RechargingActivity extends BaseActivity {
 
         srlayout = findViewById(R.id.srlayout);
         recylerview = findViewById(R.id.recylerview);
-
+        iv_bitmap = findViewById(R.id.iv_bitmap);
         recylerview.setLayoutManager(new LinearLayoutManager(mContext));
         CommonAdapter<RechargingResponse.DataBean> commonAdapter = new CommonAdapter<RechargingResponse.DataBean>(mContext, R.layout.item_recharge_order, orderList) {
             @Override
@@ -122,7 +124,7 @@ public class RechargingActivity extends BaseActivity {
         });
 
         srlayout.setRefreshing(true);
-        requestOrderHistroy();
+//        requestOrderHistroy();
     }
 
 
@@ -176,7 +178,8 @@ public class RechargingActivity extends BaseActivity {
                 LogUtils.e(TAG, "onActivityResult: " + uri.getEncodedPath());
                 try {
                     Bitmap bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
-                    String voucher = BitmapUtils.Bitmap2StrByBase64(bit, 40);
+                    String voucher = BitmapUtils.bitmapToBase64(bit, 10);
+                    iv_bitmap.setImageBitmap(BitmapUtils.base64ToBitmap(voucher));
                     LogUtils.e(TAG, "onActivityResult: " + voucher);
 //                    requestReportTask(Constants.RECHARGE_TYPE.SUCCESS, voucher);
                 } catch (FileNotFoundException e) {

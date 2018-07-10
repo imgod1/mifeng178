@@ -35,7 +35,7 @@ public class LogUtils {
                 int strLength = msg.length();
                 int start = 0;
                 int end = LOG_MAXLENGTH;
-                for (int i = 0; i < 100; i++) {
+                for (int i = 0; i < 1000; i++) {
                     //剩下的文本还是大于规定长度则继续重复截取并输出
                     if (strLength > end) {
                         Log.e(TAG + i, msg.substring(start, end));
