@@ -38,6 +38,7 @@ import com.imgod.kk.utils.LogUtils;
 import com.imgod.kk.utils.MediaPlayUtils;
 import com.imgod.kk.utils.ModelUtils;
 import com.imgod.kk.utils.OperatorUtils;
+import com.imgod.kk.utils.ScreenUtils;
 import com.imgod.kk.utils.ToastUtils;
 import com.imgod.kk.views.RowView;
 import com.zhy.adapter.recyclerview.CommonAdapter;
@@ -276,6 +277,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             tv_action_1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    ToastUtils.showToastShort(mContext, "选择凭证");
                     choosePhotoWithPermissionCheck();
                 }
             });
@@ -288,14 +290,23 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             });
             showGetOrderSuccessDialog();
         } else {
-            item_order.setVisibility(View.GONE);
-            progress_bar.setVisibility(View.VISIBLE);
-            tv_get_mobile_number.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
-                }
-            }, 5000);
+            if (baseResponse.getMsg().equals("平台暂无订单")) {
+                item_order.setVisibility(View.GONE);
+                progress_bar.setVisibility(View.VISIBLE);
+                tv_get_mobile_number.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
+                    }
+                }, 5000);
+            } else {
+                item_order.setVisibility(View.GONE);
+                progress_bar.setVisibility(View.GONE);
+                rush_model = RUSH_MODEL_NOT_RUSH;
+                tv_get_mobile_number.setText("获取号码");
+                ToastUtils.showToastShort(mContext, baseResponse.getMsg());
+            }
+
         }
     }
 
@@ -555,7 +566,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             //设置对话框的高度
             View parent = (View) provinceDialogView.getParent();
             CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) parent.getLayoutParams();
-            params.height = 500;
+            params.height = ScreenUtils.getScreenHeight(mContext) / 2;
             parent.setLayoutParams(params);
 
         }

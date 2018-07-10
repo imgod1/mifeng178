@@ -5,24 +5,33 @@ import android.util.Base64;
 
 import java.io.ByteArrayOutputStream;
 
-/**
- * BitmapUtils.java是液总汇的类。
- *
- * @author imgod1
- * @version 2.0.0 2018/7/9 9:55
- * @update imgod1 2018/7/9 9:55
- * @updateDes
- * @include {@link }
- * @used {@link }
- */
 public class BitmapUtils {
+    private static final String TAG = "BitmapUtils";
+
     public static String Bitmap2StrByBase64(Bitmap bit, int quality) {
-        if (quality <= 0 || quality > 100) {
-            quality = 40;//默认40
+        return Bitmap2StrByBase64(bit, quality, 1024 * 1000);//1m以内
+    }
+
+    public static String Bitmap2StrByBase64(Bitmap bit, int quality, int maxByteLength) {
+        byte[] bytes = Bitmap2ByteArrayByBase64(bit, quality, maxByteLength);
+        LogUtils.e(TAG, "Bitmap2StrByBase64: " + bytes.length);
+        return Base64.encodeToString(bytes, Base64.DEFAULT);
+    }
+
+    public static byte[] Bitmap2ByteArrayByBase64(Bitmap bit, int quality, int maxByteLength) {
+        if (quality > 100) {
+            quality = 40;//默认一般40
+        }
+        if (quality <= 0) {
+            quality = 10;//默认最低10
         }
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bit.compress(Bitmap.CompressFormat.JPEG, quality, bos);
         byte[] bytes = bos.toByteArray();
-        return Base64.encodeToString(bytes, Base64.DEFAULT);
+        if (bytes.length > maxByteLength && quality > 10) {
+            quality -= 10;
+            bytes = Bitmap2ByteArrayByBase64(bit, quality, maxByteLength);
+        }
+        return bytes;
     }
 }
