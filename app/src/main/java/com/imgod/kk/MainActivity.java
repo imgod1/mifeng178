@@ -1,12 +1,20 @@
 package com.imgod.kk;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -15,6 +23,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.imgod.kk.app.Constants;
@@ -22,6 +31,7 @@ import com.imgod.kk.request_model.GetTaskModel;
 import com.imgod.kk.request_model.ReportModel;
 import com.imgod.kk.response_model.BaseResponse;
 import com.imgod.kk.response_model.GetTaskResponse;
+import com.imgod.kk.utils.BitmapUtils;
 import com.imgod.kk.utils.DateUtils;
 import com.imgod.kk.utils.GsonUtil;
 import com.imgod.kk.utils.LogUtils;
@@ -42,19 +52,29 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 
 import okhttp3.Call;
 import okhttp3.MediaType;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
     public static final int RUSH_MODEL_NOT_RUSH = 0;//不抢购
     public static final int RUSH_MODEL_RUSH = 1;//抢购
     private int rush_model = RUSH_MODEL_NOT_RUSH;
 
+    public static final int TYPE_NORMAL = 0x00;//正常登陆
+    public static final int TYPE_RELOGIN = 0x01;//进来跳转到登陆页
+    private int come_type;
+
     public static void actionStart(Context context) {
+        actionStart(context, TYPE_NORMAL);
+    }
+
+    public static void actionStart(Context context, int come_type) {
         Intent intent = new Intent(context, MainActivity.class);
+        intent.putExtra("come_type", come_type);
         context.startActivity(intent);
     }
 
@@ -81,6 +101,8 @@ public class MainActivity extends BaseActivity {
     private TextView tv_action_2;
 
 
+    private ProgressBar progress_bar;
+
     private TextView tv_get_mobile_number;
 
     private void initViews() {
@@ -99,56 +121,19 @@ public class MainActivity extends BaseActivity {
         tv_action_1 = findViewById(R.id.tv_action_1);
         tv_action_2 = findViewById(R.id.tv_action_2);
 
-
+        progress_bar = findViewById(R.id.progress_bar);
         tv_get_mobile_number = findViewById(R.id.tv_get_mobile_number);
         rview_operator.setTitle("运营商");
         rview_province.setTitle("省份");
         rview_amount.setTitle("面额");
         setRowViewContent();
-        tv_get_mobile_number.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (rush_model == RUSH_MODEL_NOT_RUSH) {
-                    rush_model = RUSH_MODEL_RUSH;
-                    tv_get_mobile_number.setText("正在获取号码...");
-                    requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
-                } else {
-                    rush_model = RUSH_MODEL_NOT_RUSH;
-                    tv_get_mobile_number.setText("获取号码");
-                    requestGetTaskCall.cancel();
-                }
-
-            }
-        });
-        selectTechphoneChargeName = getString(R.string.action_30);
-        setToolBarTitle();
     }
 
     private void initEvent() {
-        rview_operator.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showSelectOperatorDialog();
-            }
-        });
-
-        rview_province.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showSelectProvinceDialog();
-            }
-        });
-
-        rview_amount.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showSelectAmountDialog();
-            }
-        });
-    }
-
-    private void setToolBarTitle() {
-        toolbar.setTitle("蜜蜂抢单: " + selectTechphoneChargeName);
+        rview_operator.setOnClickListener(this);
+        rview_province.setOnClickListener(this);
+        rview_amount.setOnClickListener(this);
+        tv_get_mobile_number.setOnClickListener(this);
     }
 
 
@@ -268,38 +253,43 @@ public class MainActivity extends BaseActivity {
         });
     }
 
+    private GetTaskResponse.DataBean orderDataBean;
+
     //解析获取任务的结果
     private void parseGetTaskResponse(String response) {
         BaseResponse baseResponse = GsonUtil.GsonToBean(response, BaseResponse.class);
         if (baseResponse.getRet() == Constants.REQUEST_STATUS.SUCCESS) {
             GetTaskResponse getTaskResponse = GsonUtil.GsonToBean(response, GetTaskResponse.class);
-            final GetTaskResponse.DataBean dataBean = getTaskResponse.getData();
+            orderDataBean = getTaskResponse.getData();
+            tv_get_mobile_number.setText("获取号码");
             item_order.setVisibility(View.VISIBLE);
-            tv_phone_number.setText(dataBean.getMobile());
-            tv_province.setText(dataBean.getProv());
-            tv_amount.setText(dataBean.getAmount());
-            tv_id.setText("订单号:" + dataBean.getId());
-            if (!TextUtils.isEmpty(dataBean.getTimeout())) {
-                tv_date.setText(DateUtils.getFormatDateTimeFromMillSecons(Long.parseLong(dataBean.getTimeout()) * 1000));
+            progress_bar.setVisibility(View.GONE);
+            tv_phone_number.setText(orderDataBean.getMobile());
+            tv_province.setText(orderDataBean.getProv());
+            tv_amount.setText(orderDataBean.getAmount());
+            tv_id.setText("订单号:" + orderDataBean.getId());
+            if (!TextUtils.isEmpty(orderDataBean.getTimeout())) {
+                tv_date.setText(DateUtils.getFormatDateTimeFromMillSecons(Long.parseLong(orderDataBean.getTimeout()) * 1000));
             }
             tv_action_1.setText("我已充值");
             tv_action_2.setText("我没充值");
             tv_action_1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
+                    choosePhotoWithPermissionCheck();
                 }
             });
 
             tv_action_2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    requestReportTask(dataBean.getId(), dataBean.getMobile(), Constants.RECHARGE_TYPE.FAILED, "");
+                    requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.FAILED, "");
                 }
             });
             showGetOrderSuccessDialog();
         } else {
             item_order.setVisibility(View.GONE);
+            progress_bar.setVisibility(View.VISIBLE);
             tv_get_mobile_number.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -327,13 +317,6 @@ public class MainActivity extends BaseActivity {
                     })
                     .create();
 
-            getOrderSuccessDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                @Override
-                public void onShow(DialogInterface dialogInterface) {
-                    MediaPlayUtils.playSound(mContext, "memeda.wav");
-                }
-            });
-
             getOrderSuccessDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialogInterface) {
@@ -343,7 +326,8 @@ public class MainActivity extends BaseActivity {
         }
 
         if (!getOrderSuccessDialog.isShowing()) {
-            getOrderSuccessDialog.dismiss();
+            getOrderSuccessDialog.show();
+            MediaPlayUtils.playSound(mContext, "memeda.wav");
         }
     }
 
@@ -389,6 +373,7 @@ public class MainActivity extends BaseActivity {
         BaseResponse baseResponse = GsonUtil.GsonToBean(response, BaseResponse.class);
         if (baseResponse.getRet() == Constants.REQUEST_STATUS.SUCCESS) {
             ToastUtils.showToastShort(mContext, baseResponse.getMsg());
+            item_order.setVisibility(View.GONE);
         } else {
             ToastUtils.showToastShort(mContext, baseResponse.getMsg());
         }
@@ -576,6 +561,109 @@ public class MainActivity extends BaseActivity {
         }
         if (null != provinceDialog && !provinceDialog.isShowing()) {
             provinceDialog.show();
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.rview_operator:
+                showSelectOperatorDialog();
+                break;
+            case R.id.rview_province:
+                showSelectProvinceDialog();
+                break;
+            case R.id.rview_amount:
+                showSelectAmountDialog();
+                break;
+            case R.id.tv_get_mobile_number:
+                if (rush_model == RUSH_MODEL_NOT_RUSH) {
+                    rush_model = RUSH_MODEL_RUSH;
+                    tv_get_mobile_number.setText("正在获取号码...");
+                    progress_bar.setVisibility(View.VISIBLE);
+                    requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
+                } else {
+                    rush_model = RUSH_MODEL_NOT_RUSH;
+                    tv_get_mobile_number.setText("获取号码");
+                    progress_bar.setVisibility(View.GONE);
+                    requestGetTaskCall.cancel();
+                }
+                break;
+        }
+    }
+
+
+    private void choosePhotoWithPermissionCheck() {
+        //第二个参数是需要申请的权限
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            //权限还没有授予，需要在这里写申请权限的代码
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_PERMISSION_CODE_WRITE_STORAGE);
+        } else {
+            //权限已经被授予，在这里直接写要执行的相应方法即可
+            choosePhoto();
+        }
+    }
+
+    private static final int REQUEST_PERMISSION_CODE_WRITE_STORAGE = 0x01;
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_PERMISSION_CODE_WRITE_STORAGE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                choosePhoto();
+            } else {
+                // Permission Denied
+                ToastUtils.showToastShort(mContext, "选择照片的权限被拒绝.无法选择");
+            }
+        }
+    }
+
+    private void choosePhoto() {
+        /**
+         * 打开选择图片的界面
+         */
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");//相片类型
+        startActivityForResult(intent, REQUEST_CODE_PICK_IMAGE);
+    }
+
+    private static final int REQUEST_CODE_PICK_IMAGE = 0x00;
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_PICK_IMAGE) {
+            if (resultCode == RESULT_OK) {
+                Uri uri = data.getData();
+                LogUtils.e(TAG, "onActivityResult: " + uri.getEncodedPath());
+                try {
+                    Bitmap bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
+                    String voucher = BitmapUtils.Bitmap2StrByBase64(bit, 40);
+                    LogUtils.e(TAG, "onActivityResult: " + voucher);
+                    requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.SUCCESS, voucher);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    ToastUtils.showToastShort(mContext, "图片不存在");
+                }
+            } else {
+                ToastUtils.showToastShort(mContext, "取消选择图片");
+            }
+        }
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        int come_type = intent.getIntExtra("come_type", TYPE_NORMAL);
+        if (come_type == TYPE_RELOGIN) {
+            LoginActivity.actionStart(mContext);
+            finish();
         }
     }
 }

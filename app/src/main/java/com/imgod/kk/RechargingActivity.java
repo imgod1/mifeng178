@@ -34,6 +34,7 @@ import com.imgod.kk.utils.ModelUtils;
 import com.imgod.kk.utils.ToastUtils;
 import com.zhy.adapter.recyclerview.CommonAdapter;
 import com.zhy.adapter.recyclerview.base.ViewHolder;
+import com.zhy.adapter.recyclerview.wrapper.EmptyWrapper;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
 import com.zhy.http.okhttp.request.RequestCall;
@@ -104,7 +105,12 @@ public class RechargingActivity extends BaseActivity {
             }
         };
 
-        recylerview.setAdapter(commonAdapter);
+
+        EmptyWrapper emptyWrapper = new EmptyWrapper(commonAdapter);
+        emptyWrapper.setEmptyView(R.layout.layout_list_empty);
+
+
+        recylerview.setAdapter(emptyWrapper);
     }
 
     private void initEvents() {
@@ -172,7 +178,7 @@ public class RechargingActivity extends BaseActivity {
                     Bitmap bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
                     String voucher = BitmapUtils.Bitmap2StrByBase64(bit, 40);
                     LogUtils.e(TAG, "onActivityResult: " + voucher);
-                    requestReportTask(Constants.RECHARGE_TYPE.SUCCESS, voucher);
+//                    requestReportTask(Constants.RECHARGE_TYPE.SUCCESS, voucher);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                     ToastUtils.showToastShort(mContext, "图片不存在");

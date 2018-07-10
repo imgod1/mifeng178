@@ -28,7 +28,7 @@ public class GetTaskResponse extends BaseResponse {
         private String id;
         private String prov;
         private String mobile;
-        private int amount;
+        private String amount;
         private String timeout;
 
         public String getId() {
@@ -55,11 +55,11 @@ public class GetTaskResponse extends BaseResponse {
             this.mobile = mobile;
         }
 
-        public int getAmount() {
+        public String getAmount() {
             return amount;
         }
 
-        public void setAmount(int amount) {
+        public void setAmount(String amount) {
             this.amount = amount;
         }
 

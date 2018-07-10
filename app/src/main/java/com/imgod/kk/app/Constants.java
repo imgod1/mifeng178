@@ -18,6 +18,7 @@ public class Constants {
     public interface REQUEST_STATUS {
         int SUCCESS = 0;
         int FAILED = 1;
+        int TOKEN_OUT_TIME = -1;//和 用户登录失败 同时判断
     }
 
     //运营商类型

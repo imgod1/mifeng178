@@ -37,16 +37,26 @@
 
         <include
             android:id="@+id/item_order"
-            android:visibility="gone"
-            layout="@layout/item_recharge_order"/>
+            layout="@layout/item_recharge_order"
+            android:visibility="gone"/>
+
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="gone"/>
 
         <TextView
             android:id="@+id/tv_get_mobile_number"
             android:layout_width="match_parent"
             android:layout_height="@dimen/row_height"
             android:layout_alignParentBottom="true"
+            android:background="@color/colorPrimary"
             android:gravity="center"
             android:text="获取号码"
+            android:textColor="@color/white"
             android:textSize="16dp"/>
     </RelativeLayout>
 </LinearLayout>

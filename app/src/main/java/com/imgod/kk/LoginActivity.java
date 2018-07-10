@@ -1,6 +1,7 @@
 package com.imgod.kk;
 
-import android.graphics.Bitmap;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.KeyEvent;
@@ -9,7 +10,6 @@ import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.imgod.kk.app.Constants;
@@ -17,13 +17,9 @@ import com.imgod.kk.request_model.LoginModel;
 import com.imgod.kk.response_model.LoginResponse;
 import com.imgod.kk.utils.GsonUtil;
 import com.imgod.kk.utils.LogUtils;
-import com.imgod.kk.utils.MD5Utils;
-import com.imgod.kk.utils.MapUtils;
 import com.imgod.kk.utils.ModelUtils;
-import com.imgod.kk.utils.SignUtils;
 import com.imgod.kk.utils.ToastUtils;
 import com.zhy.http.okhttp.OkHttpUtils;
-import com.zhy.http.okhttp.callback.BitmapCallback;
 import com.zhy.http.okhttp.callback.StringCallback;
 
 import okhttp3.Call;
@@ -36,6 +32,13 @@ public class LoginActivity extends BaseActivity {
     //    private EditText etv_img_code;
 //    private ImageView iv_code;
     private View mLoginFormView;
+
+
+    public static void actionStart(Context context) {
+        Intent intent = new Intent(context, LoginActivity.class);
+        context.startActivity(intent);
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -34,9 +34,12 @@ import okhttp3.Response;
 public class MiFengApplication extends Application {
     private static final String TAG = "MiFengApplication";
 
+    public static MiFengApplication context;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        context = this;
         initOkHttp();
     }
 

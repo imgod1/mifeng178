@@ -4,8 +4,8 @@
       tools:context="com.imgod.kk.MainActivity">
     <item
         android:id="@+id/action_histroy"
+        android:icon="@drawable/ic_histroy"
         android:orderInCategory="100"
         android:title="历史订单"
-        android:icon="@drawable/ic_histroy"
         app:showAsAction="ifRoom"/>
 </menu>
