@@ -290,7 +290,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             });
             showGetOrderSuccessDialog();
         } else {
-            if (baseResponse.getMsg().equals("平台暂无订单")) {
+            if (baseResponse.getMsg().contains("平台暂未订单")) {
                 item_order.setVisibility(View.GONE);
                 progress_bar.setVisibility(View.VISIBLE);
                 tv_get_mobile_number.postDelayed(new Runnable() {
@@ -654,7 +654,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 LogUtils.e(TAG, "onActivityResult: " + uri.getEncodedPath());
                 try {
                     Bitmap bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
-                    String voucher = BitmapUtils.bitmapToBase64(bit, 40);
+                    String voucher = BitmapUtils.bitmapToBase64WithTitle(bit, 40);
                     LogUtils.e(TAG, "onActivityResult: " + voucher);
                     requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.SUCCESS, voucher);
                 } catch (FileNotFoundException e) {

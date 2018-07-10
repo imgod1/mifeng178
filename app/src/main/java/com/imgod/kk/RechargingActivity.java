@@ -56,7 +56,6 @@ public class RechargingActivity extends BaseActivity {
 
     private SwipeRefreshLayout srlayout;
     private RecyclerView recylerview;
-    private ImageView iv_bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,11 +70,11 @@ public class RechargingActivity extends BaseActivity {
 
     private void initViews() {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("未到账订单");
         setSupportActionBar(toolbar);
 
         srlayout = findViewById(R.id.srlayout);
         recylerview = findViewById(R.id.recylerview);
-        iv_bitmap = findViewById(R.id.iv_bitmap);
         recylerview.setLayoutManager(new LinearLayoutManager(mContext));
         CommonAdapter<RechargingResponse.DataBean> commonAdapter = new CommonAdapter<RechargingResponse.DataBean>(mContext, R.layout.item_recharge_order, orderList) {
             @Override
@@ -124,7 +123,7 @@ public class RechargingActivity extends BaseActivity {
         });
 
         srlayout.setRefreshing(true);
-//        requestOrderHistroy();
+        requestOrderHistroy();
     }
 
 
@@ -178,10 +177,9 @@ public class RechargingActivity extends BaseActivity {
                 LogUtils.e(TAG, "onActivityResult: " + uri.getEncodedPath());
                 try {
                     Bitmap bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
-                    String voucher = BitmapUtils.bitmapToBase64(bit, 10);
-                    iv_bitmap.setImageBitmap(BitmapUtils.base64ToBitmap(voucher));
+                    String voucher = BitmapUtils.bitmapToBase64WithTitle(bit, 40);
                     LogUtils.e(TAG, "onActivityResult: " + voucher);
-//                    requestReportTask(Constants.RECHARGE_TYPE.SUCCESS, voucher);
+                    requestReportTask(Constants.RECHARGE_TYPE.SUCCESS, voucher);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                     ToastUtils.showToastShort(mContext, "图片不存在");
@@ -227,11 +225,11 @@ public class RechargingActivity extends BaseActivity {
     }
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_recharge, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.menu_recharge, menu);
+//        return true;
+//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

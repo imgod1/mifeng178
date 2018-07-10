@@ -9,6 +9,10 @@ import java.io.ByteArrayOutputStream;
 public class BitmapUtils {
     private static final String TAG = "BitmapUtils";
 
+    public static String bitmapToBase64WithTitle(Bitmap bit, int quality) {
+        return "data:image/jpg;base64," + bitmapToBase64(bit, quality);//1m以内
+    }
+
     public static String bitmapToBase64(Bitmap bit, int quality) {
         return bitmapToBase64(bit, quality, 1024 * 1000);//1m以内
     }
@@ -16,7 +20,6 @@ public class BitmapUtils {
     public static String bitmapToBase64(Bitmap bit, int quality, int maxByteLength) {
         byte[] bytes = bitmap2ByteArrayByBase64(bit, quality, maxByteLength);
         LogUtils.e(TAG, "Bitmap2StrByBase64: " + bytes.length);
-//        "data:image/jpg;base64," +
         return Base64.encodeToString(bytes, Base64.DEFAULT);
     }
 
@@ -30,10 +33,10 @@ public class BitmapUtils {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         bit.compress(Bitmap.CompressFormat.JPEG, quality, bos);
         byte[] bytes = bos.toByteArray();
-//        if (bytes.length > maxByteLength && quality > 10) {
-//            quality -= 10;
-//            bytes = bitmap2ByteArrayByBase64(bit, quality, maxByteLength);
-//        }
+        if (bytes.length > maxByteLength && quality > 10) {
+            quality -= 10;
+            bytes = bitmap2ByteArrayByBase64(bit, quality, maxByteLength);
+        }
         return bytes;
     }
 
