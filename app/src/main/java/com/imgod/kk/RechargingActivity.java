@@ -90,6 +90,7 @@ public class RechargingActivity extends BaseActivity {
                     public void onClick(View v) {
                         actionPosition = position;
                         //去选择图片
+                        choosePhotoWithPermissionCheck();
                     }
                 });
 

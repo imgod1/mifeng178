@@ -3,6 +3,7 @@ package com.imgod.kk.app;
 import android.app.Application;
 
 import com.imgod.kk.utils.LogUtils;
+import com.tencent.bugly.Bugly;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.cookie.CookieJarImpl;
 import com.zhy.http.okhttp.cookie.store.PersistentCookieStore;
@@ -41,6 +42,11 @@ public class MiFengApplication extends Application {
         super.onCreate();
         context = this;
         initOkHttp();
+        initBugly();
+    }
+
+    private void initBugly() {
+        Bugly.init(getApplicationContext(), "63a395b9a2", false);
     }
 
     private void initOkHttp() {
