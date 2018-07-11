@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -18,6 +19,7 @@ import com.imgod.kk.response_model.LoginResponse;
 import com.imgod.kk.utils.GsonUtil;
 import com.imgod.kk.utils.LogUtils;
 import com.imgod.kk.utils.ModelUtils;
+import com.imgod.kk.utils.SPUtils;
 import com.imgod.kk.utils.ToastUtils;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
@@ -29,6 +31,7 @@ public class LoginActivity extends BaseActivity {
 
     private EditText etv_phone;
     private EditText etv_pwd;
+    private CheckBox cbox_auto_login;
     //    private EditText etv_img_code;
 //    private ImageView iv_code;
     private View mLoginFormView;
@@ -47,6 +50,7 @@ public class LoginActivity extends BaseActivity {
         // Set up the login form.
         etv_phone = (EditText) findViewById(R.id.etv_phone);
         etv_pwd = (EditText) findViewById(R.id.etv_pwd);
+        cbox_auto_login = findViewById(R.id.cbox_auto_login);
 //        etv_img_code = findViewById(R.id.etv_img_code);
 //        iv_code = findViewById(R.id.iv_code);
         etv_pwd.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -77,6 +81,20 @@ public class LoginActivity extends BaseActivity {
         });
 
         mLoginFormView = findViewById(R.id.login_form);
+        initEvent();
+    }
+
+    public static final String SP_PHONE = "phone";
+    public static final String SP_PASSWORD = "password";
+
+    private void initEvent() {
+        String phone = SPUtils.getInstance().getString(SP_PHONE);
+        String password = SPUtils.getInstance().getString(SP_PASSWORD);
+        //判断是否设置了自动登录 保存标志位
+        if (!TextUtils.isEmpty(phone) && !TextUtils.isEmpty(password)) {
+            //请求登录的逻辑
+            requestLogin(phone, password);
+        }
     }
 
 
@@ -120,9 +138,23 @@ public class LoginActivity extends BaseActivity {
 //            return;
 //        }
 
+        //判断是否设置了自动登录 保存标志位
+        if (cbox_auto_login.isChecked()) {
+            SPUtils.getInstance().put(SP_PHONE, phone);
+            SPUtils.getInstance().put(SP_PASSWORD, password);
+        } else {//不自动登录的话 那就清空之前的存储信息
+            SPUtils.getInstance().clear();
+        }
         //请求登录的逻辑
         requestLogin(phone, password);
     }
+
+    //清空登录数据
+    public static void clearLoginData() {
+        SPUtils.getInstance().put(SP_PHONE, "");
+        SPUtils.getInstance().put(SP_PASSWORD, "");
+    }
+
 
     private boolean isPhoneValid(String phone) {
         if (TextUtils.isEmpty(phone)) {

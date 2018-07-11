@@ -38,6 +38,7 @@ import com.imgod.kk.utils.LogUtils;
 import com.imgod.kk.utils.MediaPlayUtils;
 import com.imgod.kk.utils.ModelUtils;
 import com.imgod.kk.utils.OperatorUtils;
+import com.imgod.kk.utils.SPUtils;
 import com.imgod.kk.utils.ScreenUtils;
 import com.imgod.kk.utils.ToastUtils;
 import com.imgod.kk.views.RowView;
@@ -338,7 +339,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
         if (!getOrderSuccessDialog.isShowing()) {
             getOrderSuccessDialog.show();
-            MediaPlayUtils.playSound(mContext, "memeda.wav");
+            if (SPUtils.getInstance().getBoolean(SettingActivity.SP_MUSIC, true)) {
+                MediaPlayUtils.playSound(mContext, "memeda.wav");
+            }
         }
     }
 
@@ -371,8 +374,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         reportModel.setVoucher(voucher);
         ModelUtils.initModelSign(reportModel);
 
+        String requestContent = GsonUtil.GsonString(reportModel);
         requestReportCall = OkHttpUtils.postString().url(API.OPEN_API)
-                .content(GsonUtil.GsonString(reportModel))
+                .content(requestContent)
                 .mediaType(MediaType.parse("application/json; charset=utf-8"))
                 .build();
         requestReportCall.execute(stringCallback);
@@ -428,6 +432,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         switch (id) {
             case R.id.action_histroy:
                 RechargingActivity.actionStart(mContext);
+                break;
+            case R.id.action_setting:
+                SettingActivity.actionStart(mContext);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -674,6 +681,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         int come_type = intent.getIntExtra("come_type", TYPE_NORMAL);
         if (come_type == TYPE_RELOGIN) {
             LoginActivity.actionStart(mContext);
+            finish();
+        }
+    }
+
+
+
+    @Override
+    public void onBackPressed() {
+        exit();
+    }
+
+    private long exitTime;
+
+    public void exit() {
+        if ((System.currentTimeMillis() - exitTime) > 2000) {
+            ToastUtils.showToastShort(mContext, "再按一次退出程序");
+            exitTime = System.currentTimeMillis();
+        } else {
             finish();
         }
     }
