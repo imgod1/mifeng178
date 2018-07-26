@@ -286,7 +286,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             tv_action_2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.FAILED, "");
+                    showAlertDialog();
                 }
             });
             showGetOrderSuccessDialog();
@@ -308,6 +308,39 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 ToastUtils.showToastShort(mContext, baseResponse.getMsg());
             }
 
+        }
+    }
+
+
+
+    AlertDialog mAlertDialog;
+
+    private void showAlertDialog() {
+        if (null == mAlertDialog) {
+            mAlertDialog = new AlertDialog.Builder(mContext)
+                    .setTitle("警告")
+                    .setMessage("请确认此次充值的确失败,因用户以及第三方充值平台造成的损失,蜜蜂平台以及软件作者概不负责")
+                    .setCancelable(false)
+                    .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            mAlertDialog.dismiss();
+                        }
+                    })
+                    .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            mAlertDialog.dismiss();
+                            requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.FAILED, "");
+                        }
+                    })
+                    .create();
+        }
+
+        if (!mAlertDialog.isShowing()) {
+            mAlertDialog.dismiss();
         }
     }
 
@@ -684,7 +717,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             finish();
         }
     }
-
 
 
     @Override
