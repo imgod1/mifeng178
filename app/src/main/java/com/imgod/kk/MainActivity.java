@@ -340,7 +340,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         }
 
         if (!mAlertDialog.isShowing()) {
-            mAlertDialog.dismiss();
+            mAlertDialog.show();
         }
     }
 

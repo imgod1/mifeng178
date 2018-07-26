@@ -219,7 +219,7 @@ public class RechargingActivity extends BaseActivity {
         }
 
         if (!mAlertDialog.isShowing()) {
-            mAlertDialog.dismiss();
+            mAlertDialog.show();
         }
     }
 
