@@ -8,7 +8,10 @@
         android:orderInCategory="100"
         android:title="历史订单"
         app:showAsAction="ifRoom"/>
-
+    <item
+        android:id="@+id/action_about"
+        android:title="关于"
+        app:showAsAction="never"/>
     <item
         android:id="@+id/action_setting"
         android:title="设置"

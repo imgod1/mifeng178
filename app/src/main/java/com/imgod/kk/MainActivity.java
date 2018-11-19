@@ -41,6 +41,7 @@ import com.imgod.kk.utils.OperatorUtils;
 import com.imgod.kk.utils.SPUtils;
 import com.imgod.kk.utils.ScreenUtils;
 import com.imgod.kk.utils.ToastUtils;
+import com.imgod.kk.utils.VibratorUtils;
 import com.imgod.kk.views.RowView;
 import com.zhy.adapter.recyclerview.CommonAdapter;
 import com.zhy.adapter.recyclerview.MultiItemTypeAdapter;
@@ -312,7 +313,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     }
 
 
-
     AlertDialog mAlertDialog;
 
     private void showAlertDialog() {
@@ -366,6 +366,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 @Override
                 public void onDismiss(DialogInterface dialogInterface) {
                     MediaPlayUtils.stopPlay();
+                    VibratorUtils.stopVibrator();
                 }
             });
         }
@@ -374,6 +375,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             getOrderSuccessDialog.show();
             if (SPUtils.getInstance().getBoolean(SettingActivity.SP_MUSIC, true)) {
                 MediaPlayUtils.playSound(mContext, "memeda.wav");
+            }
+
+            if (SPUtils.getInstance().getBoolean(SettingActivity.SP_VIBRATOR, true)) {
+                VibratorUtils.startVibrator(MainActivity.this);
             }
         }
     }
@@ -449,6 +454,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     protected void onDestroy() {
         super.onDestroy();
         MediaPlayUtils.stopPlay();
+        VibratorUtils.stopVibrator();
     }
 
     @Override
@@ -465,6 +471,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         switch (id) {
             case R.id.action_histroy:
                 RechargingActivity.actionStart(mContext);
+                break;
+            case R.id.action_about:
+                AboutActivity.actionStart(MainActivity.this);
                 break;
             case R.id.action_setting:
                 SettingActivity.actionStart(mContext);
