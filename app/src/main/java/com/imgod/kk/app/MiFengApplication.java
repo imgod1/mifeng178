@@ -84,7 +84,8 @@ public class MiFengApplication extends Application {
 
         };
 
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        OkHttpClient okHttpClient;
+        OkHttpClient.Builder build = new OkHttpClient.Builder()
 //                .addInterceptor(new LoggerInterceptor("TAG"))
                 .connectTimeout(10000L, TimeUnit.MILLISECONDS)
                 .readTimeout(10000L, TimeUnit.MILLISECONDS)
@@ -103,9 +104,11 @@ public class MiFengApplication extends Application {
                         Request request = rb.build();
                         return chain.proceed(request);
                     }
-                })
-                .addInterceptor(new LoggerInterceptor("mifeng", BuildConfig.DEBUG))
-                .build();
+                });
+        if (BuildConfig.DEBUG) {
+            build.addInterceptor(new LoggerInterceptor("mifeng", BuildConfig.DEBUG));
+        }
+        okHttpClient = build.build();
         OkHttpUtils.initClient(okHttpClient);
     }
 
