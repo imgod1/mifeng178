@@ -2,6 +2,7 @@ package com.imgod.kk.app;
 
 import android.app.Application;
 
+import com.imgod.kk.BuildConfig;
 import com.imgod.kk.utils.LogUtils;
 import com.tencent.bugly.Bugly;
 import com.zhy.http.okhttp.OkHttpUtils;
@@ -103,7 +104,7 @@ public class MiFengApplication extends Application {
                         return chain.proceed(request);
                     }
                 })
-                .addInterceptor(new LoggerInterceptor("mifeng"))
+                .addInterceptor(new LoggerInterceptor("mifeng", BuildConfig.DEBUG))
                 .build();
         OkHttpUtils.initClient(okHttpClient);
     }

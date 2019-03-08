@@ -292,23 +292,27 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             });
             showGetOrderSuccessDialog();
         } else {
-            if (baseResponse.getMsg().contains("平台暂未订单")) {
-                item_order.setVisibility(View.GONE);
-                progress_bar.setVisibility(View.VISIBLE);
-                tv_get_mobile_number.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
-                    }
-                }, 5000);
+            String msg = baseResponse.getMsg();
+            if (!TextUtils.isEmpty(msg)) {
+                if (msg.contains("平台暂无订单") || msg.contains("稍后再试")) {
+                    item_order.setVisibility(View.GONE);
+                    progress_bar.setVisibility(View.VISIBLE);
+                    tv_get_mobile_number.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            requestGetTask(mRequestOperator, mRequestProvince, mRequestAmount);
+                        }
+                    }, 5000);
+                } else {
+                    item_order.setVisibility(View.GONE);
+                    progress_bar.setVisibility(View.GONE);
+                    rush_model = RUSH_MODEL_NOT_RUSH;
+                    tv_get_mobile_number.setText("获取号码");
+                    ToastUtils.showToastShort(mContext, baseResponse.getMsg());
+                }
             } else {
-                item_order.setVisibility(View.GONE);
-                progress_bar.setVisibility(View.GONE);
-                rush_model = RUSH_MODEL_NOT_RUSH;
-                tv_get_mobile_number.setText("获取号码");
-                ToastUtils.showToastShort(mContext, baseResponse.getMsg());
+                ToastUtils.showToastShort(mContext, "蜜蜂服务器异常");
             }
-
         }
     }
 
