@@ -10,6 +10,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetDialog;
 import android.support.design.widget.CoordinatorLayout;
@@ -56,6 +58,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.FileNotFoundException;
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 
 import okhttp3.Call;
@@ -108,7 +111,10 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private TextView tv_get_mobile_number;
 
+    private MainHandler mMainHandler;
+
     private void initViews() {
+        mMainHandler = new MainHandler(this);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         rview_operator = findViewById(R.id.rview_operator);
@@ -459,6 +465,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (null != mMainHandler) {
+            mMainHandler.removeCallbacksAndMessages(null);
+        }
         MediaPlayUtils.stopPlay();
         VibratorUtils.stopVibrator();
     }
@@ -700,25 +709,41 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private static final int REQUEST_CODE_PICK_IMAGE = 0x00;
 
+
+    private Uri photoUri;
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_PICK_IMAGE) {
             if (resultCode == RESULT_OK) {
-                Uri uri = data.getData();
-                LogUtils.e(TAG, "onActivityResult: " + uri.getEncodedPath());
+                photoUri = data.getData();
+                LogUtils.e(TAG, "onActivityResult: " + photoUri.getEncodedPath());
                 //展示加载中的进度
                 showProgressDialog();
-                try {
-                    Bitmap bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
-                    String voucher = BitmapUtils.bitmapToBase64WithTitle(bit, 40);
-                    LogUtils.e(TAG, "onActivityResult: " + voucher);
-                    requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.SUCCESS, voucher);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                    hideProgressDialog();
-                    ToastUtils.showToastShort(mContext, "图片不存在");
-                }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Bitmap bit = null;
+                        try {
+                            bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(photoUri));
+                            String voucher = BitmapUtils.bitmapToBase64WithTitle(bit, 40);
+                            LogUtils.e(TAG, "onActivityResult: " + voucher);
+
+                            //发送给Handler
+                            Message message = Message.obtain();
+                            message.what = WHAT_DECODE_SUCCESS;
+                            message.obj = voucher;
+                            mMainHandler.sendMessage(message);
+
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                            //发送给Handler
+                            mMainHandler.sendEmptyMessage(WHAT_DECODE_FAILED);
+                        }
+                    }
+                }).start();
+//                    requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.SUCCESS, voucher);
             } else {
                 ToastUtils.showToastShort(mContext, "取消选择图片");
             }
@@ -736,6 +761,21 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         }
     }
 
+    public static final int WHAT_DECODE_SUCCESS = 0x00;
+    public static final int WHAT_DECODE_FAILED = 0x01;
+
+    public void handleMessage(Message msg) {
+        switch (msg.what) {
+            case WHAT_DECODE_SUCCESS:
+                String voucher = (String) msg.obj;
+                requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.SUCCESS, voucher);
+                break;
+            case WHAT_DECODE_FAILED:
+                hideProgressDialog();
+                ToastUtils.showToastShort(mContext, "图片不存在");
+                break;
+        }
+    }
 
     @Override
     public void onBackPressed() {
@@ -750,6 +790,23 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             exitTime = System.currentTimeMillis();
         } else {
             finish();
+        }
+    }
+
+    public static class MainHandler extends Handler {
+        private WeakReference<MainActivity> mMainActivityWeakReference;
+
+        public MainHandler(MainActivity mainActivity) {
+            mMainActivityWeakReference = new WeakReference<>(mainActivity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            MainActivity mainActivity = mMainActivityWeakReference.get();
+            if (null != mainActivity) {
+                mainActivity.handleMessage(msg);
+            }
         }
     }
 }
