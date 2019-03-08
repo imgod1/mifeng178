@@ -395,11 +395,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         requestReportTask(id, mobile, result, voucher, new StringCallback() {
             @Override
             public void onError(Call call, Exception e, int id) {
+                hideProgressDialog();
                 ToastUtils.showToastShort(mContext, e.getMessage());
             }
 
             @Override
             public void onResponse(String response, int id) {
+                hideProgressDialog();
                 LogUtils.e(TAG, "requestGetTask onResponse: " + response);
                 parseReportResponse(response);
             }
@@ -705,6 +707,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
             if (resultCode == RESULT_OK) {
                 Uri uri = data.getData();
                 LogUtils.e(TAG, "onActivityResult: " + uri.getEncodedPath());
+                //展示加载中的进度
+                showProgressDialog();
                 try {
                     Bitmap bit = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
                     String voucher = BitmapUtils.bitmapToBase64WithTitle(bit, 40);
@@ -712,6 +716,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                     requestReportTask(orderDataBean.getId(), orderDataBean.getMobile(), Constants.RECHARGE_TYPE.SUCCESS, voucher);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
+                    hideProgressDialog();
                     ToastUtils.showToastShort(mContext, "图片不存在");
                 }
             } else {
