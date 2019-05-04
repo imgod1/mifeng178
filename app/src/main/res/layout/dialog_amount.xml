@@ -3,7 +3,15 @@
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:orientation="vertical">
+    <TextView
+        android:id="@+id/tv_10"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/row_height"
+        android:gravity="center"
+        android:tag="10"
+        android:text="10"/>
 
+    <include layout="@layout/line_horizontal"/>
     <TextView
         android:id="@+id/tv_30"
         android:layout_width="match_parent"

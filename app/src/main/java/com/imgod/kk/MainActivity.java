@@ -541,6 +541,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private BottomSheetDialog amountDialog;
     private View amountDialogView;
+    private TextView tv_10;
     private TextView tv_30;
     private TextView tv_50;
     private TextView tv_100;
@@ -553,6 +554,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         if (null == amountDialog) {
             amountDialog = new BottomSheetDialog(mContext);
             amountDialogView = LayoutInflater.from(mContext).inflate(R.layout.dialog_amount, null, false);
+            tv_10 = amountDialogView.findViewById(R.id.tv_10);
             tv_30 = amountDialogView.findViewById(R.id.tv_30);
             tv_50 = amountDialogView.findViewById(R.id.tv_50);
             tv_100 = amountDialogView.findViewById(R.id.tv_100);
@@ -572,7 +574,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                     }
                 }
             };
-
+            tv_10.setOnClickListener(onClickListener);
             tv_30.setOnClickListener(onClickListener);
             tv_50.setOnClickListener(onClickListener);
             tv_100.setOnClickListener(onClickListener);
